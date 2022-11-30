@@ -1,9 +1,6 @@
-import { Page } from "../styles/components";
+import { Navigate } from "react-router-dom";
+//import { Page } from "../styles/components";
 
 export default function Homepage(props) {
-  return (
-    <Page>
-      <h2>Welcome!</h2>
-    </Page>
-  );
+  return <Navigate to={"/cars"} />;
 }

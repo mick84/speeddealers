@@ -1,5 +1,5 @@
 //import { UserAuth } from "../context/AuthContext";
-import { Container, Page } from "../styles/components";
+import { Container, Form, Page } from "../styles/components";
 import useDBFetch from "../hooks/useDBFetch";
 import CarTemplate from "../templates/CarTemplate";
 import { Buttons, Button } from "../styles/components";
@@ -16,19 +16,20 @@ export default function Cars(props) {
   const storeUser = useStoreUser();
   //console.log(storeUser);
   const [state, setState] = useDBFetch("cars");
+
   const [filter, setFilter] = useState({
     brand: "",
     maxPrice: 0,
     transmission: "",
   });
   const [dates, setDates] = useState({
-    start: new Date(Date.now()).toISOString().slice(0, 10),
-    end: new Date(new Date().getTime() + 1000 * 3600 * 24 * 2)
+    start: "", //new Date(Date.now()).toISOString().slice(0, 10),
+    end: "" /*new Date(new Date().getTime() + 1000 * 3600 * 24 * 2)
       .toISOString()
-      .slice(0, 10),
+      .slice(0, 10),*/,
+
     dateMessage: "",
   });
-  //const [sort, setSort] = useState({ dailyRent: false, maxSpeed: true });
 
   const changeInput = (e) => changeControlledInput(e, filter, setFilter);
   //console.log(state.data[0]);
@@ -46,35 +47,42 @@ export default function Cars(props) {
       setState((st) => ({ ...st, loading: false }));
     }
   };
-  const filterByDates = (start, end) => {
-    setDates((st) => ({ ...st, dateMessage: "" }));
-    console.log(start, end);
-    const [startNum, endNum] = [start, end].map(Date.parse);
-
-    console.log(startNum, endNum);
-    switch (true) {
-      case startNum < Date.now() - 1000 * 3600 * 24:
-        //start before today
-        setDates((st) => ({
-          ...st,
-          dateMessage: "Please choose correct date!",
-        }));
-        return;
-      case startNum + 1000 * 3600 * 24 * 2 > endNum:
-        //range is shorter than 2 days
-        setDates((st) => ({ ...st, dateMessage: "minimum rent: 2 days!" }));
-        return;
-      case endNum - startNum > 1000 * 3600 * 24 * 30:
-        //max rental range: month
-        setDates((st) => ({
-          ...st,
-          dateMessage: "Too long! Maximum one month!",
-        }));
-        return;
-
-      default:
-        break;
+  const byDates = (car) => {
+    const formatToNumber = (st) => Number(st.split("-").join(""));
+    const inOrder = (min, num, max) => min <= num && num <= max;
+    if (!car.rentalDates) {
+      car.rentalDates = [];
     }
+    const existingDates = car.rentalDates
+      .map(({ start, end }) => ({
+        start: formatToNumber(start),
+        end: formatToNumber(end),
+      }))
+      .sort((a, b) => a.start - b.start);
+    const [beginning, ending] = [dates.start, dates.end].map(formatToNumber);
+    const correctBeginning = !existingDates.some((date) =>
+      inOrder(beginning, date.start, ending)
+    );
+    const correctEnding = !existingDates.some((date) =>
+      inOrder(beginning, date.end, ending)
+    );
+    const correctRange = !existingDates.some(
+      (date) => date.start <= beginning && date.end >= ending
+    );
+    car.isAvailable = correctBeginning && correctEnding && correctRange;
+    return car;
+  };
+  const byBrandAndPrice = (car) => {
+    const cbr = car.brand.toLowerCase();
+    const { maxPrice } = filter;
+    const brand = filter.brand.toLowerCase();
+    return brand && maxPrice > 0
+      ? cbr.startsWith(brand) && car.dailyRent <= maxPrice
+      : brand
+      ? cbr.startsWith(brand)
+      : maxPrice > 0
+      ? car.dailyRent <= maxPrice
+      : true;
   };
   const book = async (car, index, datesObj) => {
     setState((st) => ({ ...st, loading: true }));
@@ -92,11 +100,7 @@ export default function Cars(props) {
       console.log(message);
     } finally {
       setState((st) => ({ ...st, loading: false }));
-      const dates = state.data[index].rentalDates.map(({ start, end }) => ({
-        start: new Date(start).getTime(),
-        end: new Date(end).getTime(),
-      }));
-      console.log(dates);
+      console.log(car.rentalDates); //numbers=>easy to compare!
     }
   };
   return (
@@ -106,7 +110,7 @@ export default function Cars(props) {
       }}
     >
       <Container>
-        <div>
+        <Form color={palette.blackTr}>
           <h3>Filter by:</h3>
           <FormControl
             type="text"
@@ -122,14 +126,10 @@ export default function Cars(props) {
             value={filter.maxPrice}
             onChange={changeInput}
           >
-            Max price
+            Max&nbsp;price
           </FormControl>
-        </div>
-        <div>
-          <p>Start: {dates.start}</p>
-          <p>End: {dates.end}</p>
-        </div>
-        <div>
+        </Form>
+        <Form color={palette.blackTr}>
           <h3>Choose dates to feel the speed!</h3>
           <FormControl
             type="date"
@@ -163,32 +163,16 @@ export default function Cars(props) {
           <p>{dates.dateMessage}</p>
           <Button
             color={palette.blackTr}
-            onClick={filterByDates.bind(null, dates.start, dates.end)}
+            onClick={setDates.bind(null, (d) => ({ ...d, start: "", end: "" }))}
           >
-            Get available cars
+            See all cars
           </Button>
-        </div>
+        </Form>
       </Container>
-
       <Container>
         {state.data
-          /*
-          .sort((a, b) => (b.maxSpeed - a.maxSpeed) * (sort.maxSpeed ? 1 : -1))
-          .sort(
-            (a, b) => (a.dailyRent - b.dailyRent) * (sort.dailyRent ? 1 : -1)
-          )*/
-          .filter((car) => {
-            const cbr = car.brand.toLowerCase();
-            const { maxPrice } = filter;
-            const brand = filter.brand.toLowerCase();
-            return brand && maxPrice > 0
-              ? cbr.startsWith(brand) && car.dailyRent <= maxPrice
-              : brand
-              ? cbr.startsWith(brand)
-              : maxPrice > 0
-              ? car.dailyRent <= maxPrice
-              : true;
-          })
+          .map(byDates)
+          .filter(byBrandAndPrice)
           .map((car, i) => (
             <CarTemplate {...car} key={car.id}>
               <Buttons>
@@ -208,6 +192,7 @@ export default function Cars(props) {
                       Check availability
                     </Button>
                     <Button
+                      disabled={!dates.start || !dates.end || !car.isAvailable} //or not available!
                       color={palette.btnSubmit}
                       onClick={book.bind(null, car, i, dates)}
                     >

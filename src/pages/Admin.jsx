@@ -22,6 +22,7 @@ const Admin = (props) => {
     transmission: "manual",
     dailyRent: 0,
     imageUrl: "",
+    rentalDates: [],
   };
   const [newCar, setNewCar] = useState(newCarDefault);
   const clearForm = () => setNewCar(() => newCarDefault);

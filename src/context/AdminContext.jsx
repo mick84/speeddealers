@@ -15,7 +15,6 @@ const StoreContextProvider = ({ children }) => {
     setTimeout(async () => {
       try {
         const storeUser = await getDoc(docref);
-
         setState(() => ({ id: storeUser.id, ...storeUser.data() }));
       } catch (error) {
         console.log(error);

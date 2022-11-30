@@ -7,7 +7,9 @@ export const Button = styled.button`
   color: white;
   font-size: 1.1rem;
   border: 1px solid white;
-  // height: fit-content;
+  &:disabled {
+    filter: grayscale(1);
+  }
 `;
 export const Container = styled.div`
   padding: 1rem;
@@ -51,16 +53,6 @@ export const Inputblock = styled.div`
     font-size: 1.1rem;
     width: 12rem;
   }
-`;
-export const Page = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.5rem;
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  align-self: stretch;
 `;
 export const NavbarLayout = styled.nav`
   .logo {
@@ -108,6 +100,16 @@ export const NavbarLayout = styled.nav`
   }
 `;
 
+export const Page = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 92vh;
+`;
 export const Buttons = styled.div`
   display: flex;
   gap: 2rem;
@@ -128,7 +130,6 @@ export const ProfileLayout = styled(Card)`
   }
 `;
 export const CarCard = styled(Card)`
- 
   font-size: 1.2rem;
   color: ${palette.antiquewhite};
 

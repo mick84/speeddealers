@@ -34,7 +34,7 @@ function Signup(props) {
     }
   };
   return (
-    <Page>
+    <Page style={{ backgroundImage: `url("super_royist1-scaled.jpg")` }}>
       <p>
         Already have an account? <Link to="/signin">Sign in</Link>
       </p>
